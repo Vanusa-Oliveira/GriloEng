@@ -3,8 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash2, Download, Camera } from "lucide-react";
+import { Plus, Trash2, Download, Camera, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import Tesseract from "tesseract.js";
 import ExportDialog from "./ExportDialog";
 
 export interface SteelRow {
@@ -22,8 +23,8 @@ const SteelTable = () => {
     { id: crypto.randomUUID(), n: 1, bitola: "10.0", comp: 0, q: 0 },
   ]);
   const [image, setImage] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
-  const [exportType, setExportType] = useState<"table" | "summary">("table");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const tableRef = useRef<HTMLDivElement>(null);
   const summaryRef = useRef<HTMLDivElement>(null);
@@ -67,13 +68,52 @@ const SteelTable = () => {
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (ev) => setImage(ev.target?.result as string);
+      reader.onload = async (ev) => {
+        const dataUrl = ev.target?.result as string;
+        setImage(dataUrl);
+        toast.success("Imagem carregada! Processando OCR...");
+        setIsProcessing(true);
+        try {
+          const { data: { text } } = await Tesseract.recognize(dataUrl, "por");
+          parseOcrText(text);
+          toast.success("Dados extraídos da imagem com sucesso!");
+        } catch (err) {
+          console.error("OCR error:", err);
+          toast.error("Erro ao processar OCR na imagem.");
+        } finally {
+          setIsProcessing(false);
+        }
+      };
       reader.readAsDataURL(file);
-      toast.success("Imagem carregada com sucesso!");
+    }
+  };
+
+  const parseOcrText = (text: string) => {
+    const lines = text.split("\n").filter((l) => l.trim());
+    const newRows: SteelRow[] = [];
+    for (const line of lines) {
+      const nums = line.match(/[\d]+[.,]?[\d]*/g);
+      if (nums && nums.length >= 2) {
+        const values = nums.map((n) => parseFloat(n.replace(",", ".")));
+        const matchedBitola = BITOLAS.find((b) => values.some((v) => Math.abs(v - parseFloat(b)) < 0.5));
+        const bitola = matchedBitola || "10.0";
+        const remaining = values.filter((v) => !matchedBitola || Math.abs(v - parseFloat(bitola)) >= 0.5);
+        const comp = remaining[0] || 0;
+        const q = remaining[1] ? Math.round(remaining[1]) : 1;
+        newRows.push({ id: crypto.randomUUID(), n: newRows.length + 1, bitola, comp, q });
+      }
+    }
+    if (newRows.length > 0) {
+      setRows((prev) => {
+        const start = prev.length;
+        return [...prev, ...newRows.map((r, i) => ({ ...r, n: start + i + 1 }))];
+      });
+    } else {
+      toast.info("Nenhum dado numérico encontrado na imagem.");
     }
   };
 
@@ -81,7 +121,7 @@ const SteelTable = () => {
     if (type === "summary") {
       exportSummaryAsPng();
     } else {
-      setExportType("table");
+      setShowExportDialog(true);
       setShowExportDialog(true);
     }
   };
@@ -112,9 +152,9 @@ const SteelTable = () => {
           className="hidden"
           onChange={handleFileChange}
         />
-        <Button variant="outline" onClick={handleImageCapture}>
-          <Camera className="h-4 w-4 mr-2" />
-          Tirar Foto / Galeria
+        <Button variant="outline" onClick={handleImageCapture} disabled={isProcessing}>
+          {isProcessing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Camera className="h-4 w-4 mr-2" />}
+          {isProcessing ? "Processando OCR..." : "Tirar Foto / Galeria"}
         </Button>
         {image && (
           <img src={image} alt="Captura" className="h-16 w-16 rounded-md object-cover border border-border" />
