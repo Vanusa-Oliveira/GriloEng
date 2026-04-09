@@ -23,8 +23,8 @@ const SteelTable = () => {
     { id: crypto.randomUUID(), n: 1, bitola: "10.0", comp: 0, q: 0 },
   ]);
   const [image, setImage] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
-  const [exportType, setExportType] = useState<"table" | "summary">("table");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const tableRef = useRef<HTMLDivElement>(null);
   const summaryRef = useRef<HTMLDivElement>(null);
