@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Trash2, Download, Camera, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import Tesseract from "tesseract.js";
+import { supabase } from "@/integrations/supabase/client";
 import ExportDialog from "./ExportDialog";
 
 export interface SteelRow {
