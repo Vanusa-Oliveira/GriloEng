@@ -152,9 +152,9 @@ const SteelTable = () => {
           className="hidden"
           onChange={handleFileChange}
         />
-        <Button variant="outline" onClick={handleImageCapture}>
-          <Camera className="h-4 w-4 mr-2" />
-          Tirar Foto / Galeria
+        <Button variant="outline" onClick={handleImageCapture} disabled={isProcessing}>
+          {isProcessing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Camera className="h-4 w-4 mr-2" />}
+          {isProcessing ? "Processando OCR..." : "Tirar Foto / Galeria"}
         </Button>
         {image && (
           <img src={image} alt="Captura" className="h-16 w-16 rounded-md object-cover border border-border" />
