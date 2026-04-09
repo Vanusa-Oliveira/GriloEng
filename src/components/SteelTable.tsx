@@ -121,7 +121,7 @@ const SteelTable = () => {
     if (type === "summary") {
       exportSummaryAsPng();
     } else {
-      setExportType("table");
+      setShowExportDialog(true);
       setShowExportDialog(true);
     }
   };
