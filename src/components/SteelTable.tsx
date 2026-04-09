@@ -68,13 +68,52 @@ const SteelTable = () => {
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (ev) => setImage(ev.target?.result as string);
+      reader.onload = async (ev) => {
+        const dataUrl = ev.target?.result as string;
+        setImage(dataUrl);
+        toast.success("Imagem carregada! Processando OCR...");
+        setIsProcessing(true);
+        try {
+          const { data: { text } } = await Tesseract.recognize(dataUrl, "por");
+          parseOcrText(text);
+          toast.success("Dados extraídos da imagem com sucesso!");
+        } catch (err) {
+          console.error("OCR error:", err);
+          toast.error("Erro ao processar OCR na imagem.");
+        } finally {
+          setIsProcessing(false);
+        }
+      };
       reader.readAsDataURL(file);
-      toast.success("Imagem carregada com sucesso!");
+    }
+  };
+
+  const parseOcrText = (text: string) => {
+    const lines = text.split("\n").filter((l) => l.trim());
+    const newRows: SteelRow[] = [];
+    for (const line of lines) {
+      const nums = line.match(/[\d]+[.,]?[\d]*/g);
+      if (nums && nums.length >= 2) {
+        const values = nums.map((n) => parseFloat(n.replace(",", ".")));
+        const matchedBitola = BITOLAS.find((b) => values.some((v) => Math.abs(v - parseFloat(b)) < 0.5));
+        const bitola = matchedBitola || "10.0";
+        const remaining = values.filter((v) => !matchedBitola || Math.abs(v - parseFloat(bitola)) >= 0.5);
+        const comp = remaining[0] || 0;
+        const q = remaining[1] ? Math.round(remaining[1]) : 1;
+        newRows.push({ id: crypto.randomUUID(), n: newRows.length + 1, bitola, comp, q });
+      }
+    }
+    if (newRows.length > 0) {
+      setRows((prev) => {
+        const start = prev.length;
+        return [...prev, ...newRows.map((r, i) => ({ ...r, n: start + i + 1 }))];
+      });
+    } else {
+      toast.info("Nenhum dado numérico encontrado na imagem.");
     }
   };
 
