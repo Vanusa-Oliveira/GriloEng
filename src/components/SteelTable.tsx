@@ -117,30 +117,6 @@ const SteelTable = () => {
     }
   };
 
-  const parseOcrText = (text: string) => {
-    const lines = text.split("\n").filter((l) => l.trim());
-    const newRows: SteelRow[] = [];
-    for (const line of lines) {
-      const nums = line.match(/[\d]+[.,]?[\d]*/g);
-      if (nums && nums.length >= 2) {
-        const values = nums.map((n) => parseFloat(n.replace(",", ".")));
-        const matchedBitola = BITOLAS.find((b) => values.some((v) => Math.abs(v - parseFloat(b)) < 0.5));
-        const bitola = matchedBitola || "10.0";
-        const remaining = values.filter((v) => !matchedBitola || Math.abs(v - parseFloat(bitola)) >= 0.5);
-        const comp = remaining[0] || 0;
-        const q = remaining[1] ? Math.round(remaining[1]) : 1;
-        newRows.push({ id: crypto.randomUUID(), n: newRows.length + 1, bitola, comp, q });
-      }
-    }
-    if (newRows.length > 0) {
-      setRows((prev) => {
-        const start = prev.length;
-        return [...prev, ...newRows.map((r, i) => ({ ...r, n: start + i + 1 }))];
-      });
-    } else {
-      toast.info("Nenhum dado numérico encontrado na imagem.");
-    }
-  };
 
   const handleExport = (type: "table" | "summary") => {
     if (type === "summary") {
