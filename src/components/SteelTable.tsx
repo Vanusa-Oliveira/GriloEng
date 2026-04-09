@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Trash2, Download, Camera, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import Tesseract from "tesseract.js";
+import { supabase } from "@/integrations/supabase/client";
 import ExportDialog from "./ExportDialog";
 
 export interface SteelRow {
@@ -75,15 +75,40 @@ const SteelTable = () => {
       reader.onload = async (ev) => {
         const dataUrl = ev.target?.result as string;
         setImage(dataUrl);
-        toast.success("Imagem carregada! Processando OCR...");
+        toast.success("Imagem carregada! Processando com IA...");
         setIsProcessing(true);
         try {
-          const { data: { text } } = await Tesseract.recognize(dataUrl, "por");
-          parseOcrText(text);
-          toast.success("Dados extraídos da imagem com sucesso!");
+          const { data, error } = await supabase.functions.invoke("extract-table", {
+            body: { imageBase64: dataUrl },
+          });
+
+          if (error) {
+            console.error("Edge function error:", error);
+            toast.error("Erro ao processar imagem com IA.");
+            return;
+          }
+
+          if (data?.rows && data.rows.length > 0) {
+            setRows((prev) => {
+              const start = prev.length;
+              return [
+                ...prev,
+                ...data.rows.map((r: any, i: number) => ({
+                  id: crypto.randomUUID(),
+                  n: start + i + 1,
+                  bitola: r.bitola,
+                  comp: r.comp,
+                  q: r.q,
+                })),
+              ];
+            });
+            toast.success(`${data.rows.length} linhas extraídas com IA!`);
+          } else {
+            toast.info("Nenhum dado de tabela de aço encontrado na imagem.");
+          }
         } catch (err) {
-          console.error("OCR error:", err);
-          toast.error("Erro ao processar OCR na imagem.");
+          console.error("AI extraction error:", err);
+          toast.error("Erro ao processar imagem.");
         } finally {
           setIsProcessing(false);
         }
@@ -92,30 +117,6 @@ const SteelTable = () => {
     }
   };
 
-  const parseOcrText = (text: string) => {
-    const lines = text.split("\n").filter((l) => l.trim());
-    const newRows: SteelRow[] = [];
-    for (const line of lines) {
-      const nums = line.match(/[\d]+[.,]?[\d]*/g);
-      if (nums && nums.length >= 2) {
-        const values = nums.map((n) => parseFloat(n.replace(",", ".")));
-        const matchedBitola = BITOLAS.find((b) => values.some((v) => Math.abs(v - parseFloat(b)) < 0.5));
-        const bitola = matchedBitola || "10.0";
-        const remaining = values.filter((v) => !matchedBitola || Math.abs(v - parseFloat(bitola)) >= 0.5);
-        const comp = remaining[0] || 0;
-        const q = remaining[1] ? Math.round(remaining[1]) : 1;
-        newRows.push({ id: crypto.randomUUID(), n: newRows.length + 1, bitola, comp, q });
-      }
-    }
-    if (newRows.length > 0) {
-      setRows((prev) => {
-        const start = prev.length;
-        return [...prev, ...newRows.map((r, i) => ({ ...r, n: start + i + 1 }))];
-      });
-    } else {
-      toast.info("Nenhum dado numérico encontrado na imagem.");
-    }
-  };
 
   const handleExport = (type: "table" | "summary") => {
     if (type === "summary") {
