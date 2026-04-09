@@ -75,15 +75,40 @@ const SteelTable = () => {
       reader.onload = async (ev) => {
         const dataUrl = ev.target?.result as string;
         setImage(dataUrl);
-        toast.success("Imagem carregada! Processando OCR...");
+        toast.success("Imagem carregada! Processando com IA...");
         setIsProcessing(true);
         try {
-          const { data: { text } } = await Tesseract.recognize(dataUrl, "por");
-          parseOcrText(text);
-          toast.success("Dados extraídos da imagem com sucesso!");
+          const { data, error } = await supabase.functions.invoke("extract-table", {
+            body: { imageBase64: dataUrl },
+          });
+
+          if (error) {
+            console.error("Edge function error:", error);
+            toast.error("Erro ao processar imagem com IA.");
+            return;
+          }
+
+          if (data?.rows && data.rows.length > 0) {
+            setRows((prev) => {
+              const start = prev.length;
+              return [
+                ...prev,
+                ...data.rows.map((r: any, i: number) => ({
+                  id: crypto.randomUUID(),
+                  n: start + i + 1,
+                  bitola: r.bitola,
+                  comp: r.comp,
+                  q: r.q,
+                })),
+              ];
+            });
+            toast.success(`${data.rows.length} linhas extraídas com IA!`);
+          } else {
+            toast.info("Nenhum dado de tabela de aço encontrado na imagem.");
+          }
         } catch (err) {
-          console.error("OCR error:", err);
-          toast.error("Erro ao processar OCR na imagem.");
+          console.error("AI extraction error:", err);
+          toast.error("Erro ao processar imagem.");
         } finally {
           setIsProcessing(false);
         }
