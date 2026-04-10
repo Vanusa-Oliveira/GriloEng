@@ -12,21 +12,18 @@ export interface SteelRow {
   id: string;
   n: number;
   bitola: string;
-  comp: number;
+  comp: number; // stored in centimeters
   q: number;
 }
 
 const BITOLAS = ["5.0", "6.3", "8.0", "10.0", "12.5", "16.0", "20.0", "25.0", "32.0"];
 
 const SteelTable = () => {
-  const [rows, setRows] = useState<SteelRow[]>([
-    { id: crypto.randomUUID(), n: 1, bitola: "10.0", comp: 0, q: 0 },
-  ]);
+  const [rows, setRows] = useState<SteelRow[]>([]);
   const [image, setImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const tableRef = useRef<HTMLDivElement>(null);
   const summaryRef = useRef<HTMLDivElement>(null);
 
   const addRow = () => {
@@ -49,12 +46,14 @@ const SteelTable = () => {
     );
   };
 
-  const getTotal = (row: SteelRow) => +(row.comp * row.q).toFixed(2);
+  // comp is in cm, convert to meters for total
+  const getCompMeters = (compCm: number) => compCm / 100;
+  const getTotalMeters = (row: SteelRow) => +(getCompMeters(row.comp) * row.q).toFixed(2);
 
   const summary = rows.reduce<Record<string, { totalMeters: number; pesoCalculado: number; pesoCompra: number }>>(
     (acc, row) => {
       const key = row.bitola;
-      const meters = getTotal(row);
+      const meters = getTotalMeters(row);
       const weightPerMeter = getWeightPerMeter(parseFloat(key));
       if (!acc[key]) acc[key] = { totalMeters: 0, pesoCalculado: 0, pesoCompra: 0 };
       acc[key].totalMeters += meters;
@@ -64,7 +63,6 @@ const SteelTable = () => {
     {}
   );
 
-  // Apply rounding to next multiple of 5 (ceiling)
   Object.values(summary).forEach((data) => {
     data.pesoCompra = Math.ceil(data.pesoCalculado / 5) * 5;
   });
@@ -96,19 +94,16 @@ const SteelTable = () => {
           }
 
           if (data?.rows && data.rows.length > 0) {
-            setRows((prev) => {
-              const start = prev.length;
-              return [
-                ...prev,
-                ...data.rows.map((r: any, i: number) => ({
-                  id: crypto.randomUUID(),
-                  n: start + i + 1,
-                  bitola: r.bitola,
-                  comp: r.comp,
-                  q: r.q,
-                })),
-              ];
-            });
+            // Replace all rows (start from empty)
+            setRows(
+              data.rows.map((r: any, i: number) => ({
+                id: crypto.randomUUID(),
+                n: i + 1,
+                bitola: r.bitola,
+                comp: r.comp, // AI returns in cm
+                q: r.q,
+              }))
+            );
             toast.success(`${data.rows.length} linhas extraídas com IA!`);
           } else {
             toast.info("Nenhum dado de tabela de aço encontrado na imagem.");
@@ -124,12 +119,10 @@ const SteelTable = () => {
     }
   };
 
-
   const handleExport = (type: "table" | "summary") => {
     if (type === "summary") {
       exportSummaryAsPng();
     } else {
-      setShowExportDialog(true);
       setShowExportDialog(true);
     }
   };
@@ -169,20 +162,27 @@ const SteelTable = () => {
         )}
       </div>
 
-      <div ref={tableRef}>
+      <div>
         <div className="rounded-lg border border-border overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow className="bg-primary/5">
                 <TableHead className="w-14 text-center font-semibold">N</TableHead>
                 <TableHead className="font-semibold">Bitola (mm)</TableHead>
-                <TableHead className="font-semibold">COMP (m)</TableHead>
+                <TableHead className="font-semibold">COMP (cm)</TableHead>
                 <TableHead className="font-semibold">Q</TableHead>
                 <TableHead className="font-semibold">Total (m)</TableHead>
                 <TableHead className="w-14" />
               </TableRow>
             </TableHeader>
             <TableBody>
+              {rows.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                    Nenhuma linha adicionada. Clique em "Adicionar Linha" ou tire uma foto.
+                  </TableCell>
+                </TableRow>
+              )}
               {rows.map((row) => (
                 <TableRow key={row.id}>
                   <TableCell className="text-center font-medium text-muted-foreground">{row.n}</TableCell>
@@ -201,11 +201,11 @@ const SteelTable = () => {
                   <TableCell>
                     <Input
                       type="number"
-                      step="0.01"
+                      step="1"
                       min="0"
                       value={row.comp || ""}
                       onChange={(e) => updateRow(row.id, "comp", parseFloat(e.target.value) || 0)}
-                      placeholder="0.00"
+                      placeholder="0"
                     />
                   </TableCell>
                   <TableCell>
@@ -218,7 +218,7 @@ const SteelTable = () => {
                       placeholder="0"
                     />
                   </TableCell>
-                  <TableCell className="font-medium">{getTotal(row)}</TableCell>
+                  <TableCell className="font-medium">{getTotalMeters(row)}</TableCell>
                   <TableCell>
                     <Button variant="ghost" size="icon" onClick={() => removeRow(row.id)} className="text-destructive hover:text-destructive">
                       <Trash2 className="h-4 w-4" />
@@ -236,7 +236,7 @@ const SteelTable = () => {
           <Plus className="h-4 w-4 mr-2" />
           Adicionar Linha
         </Button>
-        <Button variant="outline" onClick={() => handleExport("table")}>
+        <Button variant="outline" onClick={() => handleExport("table")} disabled={rows.length === 0}>
           <Download className="h-4 w-4 mr-2" />
           Exportar Tabela (PNG)
         </Button>
@@ -248,7 +248,7 @@ const SteelTable = () => {
           <div className="rounded-lg border border-border overflow-hidden">
             <Table>
               <TableHeader>
-              <TableRow className="bg-primary/5">
+                <TableRow className="bg-primary/5">
                   <TableHead className="font-semibold">Bitola (mm)</TableHead>
                   <TableHead className="font-semibold">Comp. Acumulado (m)</TableHead>
                   <TableHead className="font-semibold">Peso Calculado (kg)</TableHead>
@@ -284,7 +284,7 @@ const SteelTable = () => {
           </div>
         </div>
         <div className="mt-3">
-          <Button variant="outline" onClick={() => handleExport("summary")}>
+          <Button variant="outline" onClick={() => handleExport("summary")} disabled={Object.keys(summary).length === 0}>
             <Download className="h-4 w-4 mr-2" />
             Exportar Resumo (PNG)
           </Button>
