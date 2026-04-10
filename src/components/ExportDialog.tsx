@@ -20,7 +20,6 @@ interface ExportDialogProps {
 
 const ExportDialog = ({ open, onOpenChange, rows }: ExportDialogProps) => {
   const [columns, setColumns] = useState("1");
-  const [layout, setLayout] = useState<"side" | "stack">("side");
   const exportRef = useRef<HTMLDivElement>(null);
 
   const colCount = parseInt(columns);
@@ -30,6 +29,9 @@ const ExportDialog = ({ open, onOpenChange, rows }: ExportDialogProps) => {
   for (let i = 0; i < colCount; i++) {
     chunks.push(rows.slice(i * rowsPerCol, (i + 1) * rowsPerCol));
   }
+
+  // Generate column options based on row count
+  const columnOptions = [1, 2, 3, 4].filter((n) => n <= rows.length || n === 1);
 
   const handleExport = async () => {
     const { toPng } = await import("html-to-image");
@@ -50,58 +52,49 @@ const ExportDialog = ({ open, onOpenChange, rows }: ExportDialogProps) => {
     }
   };
 
+  const getColLabel = (n: number) => {
+    if (n === 1) return "1 Coluna (Vertical)";
+    const approx = Math.ceil(rows.length / n);
+    return `${n} Colunas (aprox. ${approx} linhas cada)`;
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Exportar Tabela de Entrada</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="flex flex-wrap gap-4 items-end">
-            <div className="space-y-2">
-              <Label>Dividir em quantas colunas?</Label>
-              <Select value={columns} onValueChange={setColumns}>
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {[1, 2, 3, 4].map((n) => (
-                    <SelectItem key={n} value={String(n)}>
-                      {n} {n === 1 ? "coluna" : "colunas"}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {colCount > 1 && (
-              <div className="space-y-2">
-                <Label>Disposição</Label>
-                <Select value={layout} onValueChange={(v) => setLayout(v as "side" | "stack")}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="side">Lado a lado</SelectItem>
-                    <SelectItem value="stack">Uma abaixo da outra</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
+          <div className="space-y-2">
+            <Label>Em quantas colunas você deseja dividir a tabela?</Label>
+            <Select value={columns} onValueChange={setColumns}>
+              <SelectTrigger className="w-64">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {columnOptions.map((n) => (
+                  <SelectItem key={n} value={String(n)}>
+                    {getColLabel(n)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="border border-border rounded-lg p-4 bg-card overflow-auto">
             <div ref={exportRef} style={{ padding: "16px", backgroundColor: "#ffffff" }}>
-              <h3 style={{ fontSize: "16px", fontWeight: 600, marginBottom: "12px", color: "#1e3a5f", fontFamily: "Inter, sans-serif" }}>
+              <h3 style={{
+                fontSize: "18px",
+                fontWeight: 700,
+                marginBottom: "16px",
+                color: "#1e3a5f",
+                fontFamily: "Inter, sans-serif",
+                textAlign: "center",
+              }}>
                 Tabela de Entrada — Grilo Engenharia
               </h3>
-              <div
-                style={{
-                  display: layout === "side" ? "flex" : "block",
-                  gap: "16px",
-                  flexWrap: "wrap",
-                }}
-              >
+              <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", justifyContent: "center" }}>
                 {chunks.map((chunk, ci) => (
                   <table
                     key={ci}
@@ -109,9 +102,9 @@ const ExportDialog = ({ open, onOpenChange, rows }: ExportDialogProps) => {
                       borderCollapse: "collapse",
                       fontSize: "13px",
                       fontFamily: "Inter, sans-serif",
-                      marginBottom: layout === "stack" ? "16px" : "0",
-                      flex: layout === "side" ? "1" : undefined,
                       minWidth: "200px",
+                      flex: colCount > 1 ? "1" : undefined,
+                      maxWidth: colCount === 1 ? "400px" : undefined,
                     }}
                   >
                     <thead>
@@ -143,7 +136,7 @@ const ExportDialog = ({ open, onOpenChange, rows }: ExportDialogProps) => {
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
-          <Button onClick={handleExport}>Exportar PNG</Button>
+          <Button onClick={handleExport}>Confirmar Exportação</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
