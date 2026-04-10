@@ -28,17 +28,19 @@ const Index = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="animate-pulse text-muted-foreground">Carregando...</div>
+      <div className="flex min-h-screen items-center justify-center bg-[#f8fafc]">
+        <div className="animate-pulse text-gray-400">Carregando...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#f8fafc]">
       <AppHeader />
-      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
-        <SteelTable />
+      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 space-y-6">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-6">
+          <SteelTable />
+        </div>
       </main>
     </div>
   );
