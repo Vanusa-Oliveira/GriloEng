@@ -242,8 +242,8 @@ const SteelTable = () => {
         </Button>
       </div>
 
-      <div>
-        <h2 className="text-lg font-semibold text-foreground mb-3">Resumo por Bitola</h2>
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-3">Resumo por Bitola</h2>
         <div ref={summaryRef}>
           <div className="rounded-lg border border-border overflow-hidden">
             <Table>
