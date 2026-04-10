@@ -51,18 +51,25 @@ const SteelTable = () => {
 
   const getTotal = (row: SteelRow) => +(row.comp * row.q).toFixed(2);
 
-  const summary = rows.reduce<Record<string, { totalMeters: number; totalKg: number }>>(
+  const summary = rows.reduce<Record<string, { totalMeters: number; pesoCalculado: number; pesoCompra: number }>>(
     (acc, row) => {
       const key = row.bitola;
       const meters = getTotal(row);
       const weightPerMeter = getWeightPerMeter(parseFloat(key));
-      if (!acc[key]) acc[key] = { totalMeters: 0, totalKg: 0 };
+      if (!acc[key]) acc[key] = { totalMeters: 0, pesoCalculado: 0, pesoCompra: 0 };
       acc[key].totalMeters += meters;
-      acc[key].totalKg += meters * weightPerMeter;
+      acc[key].pesoCalculado += meters * weightPerMeter * 0.9;
       return acc;
     },
     {}
   );
+
+  // Apply rounding to next multiple of 5 (ceiling)
+  Object.values(summary).forEach((data) => {
+    data.pesoCompra = Math.ceil(data.pesoCalculado / 5) * 5;
+  });
+
+  const pesoTotalCompra = Object.values(summary).reduce((sum, d) => sum + d.pesoCompra, 0);
 
   const handleImageCapture = () => {
     fileInputRef.current?.click();
@@ -241,10 +248,11 @@ const SteelTable = () => {
           <div className="rounded-lg border border-border overflow-hidden">
             <Table>
               <TableHeader>
-                <TableRow className="bg-primary/5">
+              <TableRow className="bg-primary/5">
                   <TableHead className="font-semibold">Bitola (mm)</TableHead>
-                  <TableHead className="font-semibold">Total (m)</TableHead>
-                  <TableHead className="font-semibold">Peso (kg)</TableHead>
+                  <TableHead className="font-semibold">Comp. Acumulado (m)</TableHead>
+                  <TableHead className="font-semibold">Peso Calculado (kg)</TableHead>
+                  <TableHead className="font-semibold">Peso p/ Compra (kg)</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -252,16 +260,23 @@ const SteelTable = () => {
                   .sort(([a], [b]) => parseFloat(a) - parseFloat(b))
                   .map(([bitola, data]) => (
                     <TableRow key={bitola}>
-                      <TableCell className="font-medium">{bitola}</TableCell>
+                      <TableCell className="font-medium">Ø {bitola}</TableCell>
                       <TableCell>{data.totalMeters.toFixed(2)}</TableCell>
-                      <TableCell>{data.totalKg.toFixed(2)}</TableCell>
+                      <TableCell>{data.pesoCalculado.toFixed(2)}</TableCell>
+                      <TableCell className="font-semibold">{data.pesoCompra}</TableCell>
                     </TableRow>
                   ))}
                 {Object.keys(summary).length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={3} className="text-center text-muted-foreground py-4">
+                    <TableCell colSpan={4} className="text-center text-muted-foreground py-4">
                       Nenhum dado inserido
                     </TableCell>
+                  </TableRow>
+                )}
+                {Object.keys(summary).length > 0 && (
+                  <TableRow className="bg-primary/10 font-bold">
+                    <TableCell colSpan={3} className="text-right font-semibold">PESO TOTAL PARA COMPRA</TableCell>
+                    <TableCell className="font-bold text-primary">{pesoTotalCompra} kg</TableCell>
                   </TableRow>
                 )}
               </TableBody>
