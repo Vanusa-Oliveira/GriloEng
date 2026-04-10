@@ -51,18 +51,25 @@ const SteelTable = () => {
 
   const getTotal = (row: SteelRow) => +(row.comp * row.q).toFixed(2);
 
-  const summary = rows.reduce<Record<string, { totalMeters: number; totalKg: number }>>(
+  const summary = rows.reduce<Record<string, { totalMeters: number; pesoCalculado: number; pesoCompra: number }>>(
     (acc, row) => {
       const key = row.bitola;
       const meters = getTotal(row);
       const weightPerMeter = getWeightPerMeter(parseFloat(key));
-      if (!acc[key]) acc[key] = { totalMeters: 0, totalKg: 0 };
+      if (!acc[key]) acc[key] = { totalMeters: 0, pesoCalculado: 0, pesoCompra: 0 };
       acc[key].totalMeters += meters;
-      acc[key].totalKg += meters * weightPerMeter;
+      acc[key].pesoCalculado += meters * weightPerMeter * 0.9;
       return acc;
     },
     {}
   );
+
+  // Apply rounding to next multiple of 5 (ceiling)
+  Object.values(summary).forEach((data) => {
+    data.pesoCompra = Math.ceil(data.pesoCalculado / 5) * 5;
+  });
+
+  const pesoTotalCompra = Object.values(summary).reduce((sum, d) => sum + d.pesoCompra, 0);
 
   const handleImageCapture = () => {
     fileInputRef.current?.click();
