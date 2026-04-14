@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash2, Download, Camera, Loader2 } from "lucide-react";
+import { Plus, Trash2, Download, Camera, Loader2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import ExportDialog from "./ExportDialog";
@@ -153,7 +153,7 @@ const SteelTable = () => {
           className="hidden"
           onChange={handleFileChange}
         />
-        <Button variant="outline" onClick={handleImageCapture} disabled={isProcessing}>
+        <Button variant="outline" onClick={handleImageCapture} disabled={isProcessing} className="w-full sm:w-auto">
           {isProcessing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Camera className="h-4 w-4 mr-2" />}
           {isProcessing ? "Processando OCR..." : "Tirar Foto / Galeria"}
         </Button>
@@ -232,11 +232,20 @@ const SteelTable = () => {
       </div>
 
       <div className="flex flex-wrap gap-3">
-        <Button onClick={addRow} variant="outline">
+        <Button onClick={addRow} variant="outline" className="flex-1 sm:flex-none">
           <Plus className="h-4 w-4 mr-2" />
           Adicionar Linha
         </Button>
-        <Button variant="outline" onClick={() => handleExport("table")} disabled={rows.length === 0}>
+        <Button
+          variant="outline"
+          onClick={() => { setRows([]); toast.success("Tabela limpa!"); }}
+          disabled={rows.length === 0}
+          className="flex-1 sm:flex-none text-destructive hover:text-destructive"
+        >
+          <XCircle className="h-4 w-4 mr-2" />
+          Limpar Tudo
+        </Button>
+        <Button variant="outline" onClick={() => handleExport("table")} disabled={rows.length === 0} className="flex-1 sm:flex-none">
           <Download className="h-4 w-4 mr-2" />
           Exportar Tabela (PNG)
         </Button>

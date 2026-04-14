@@ -38,9 +38,9 @@ const AppHeader = () => {
           {userName && (
             <span className="text-sm text-gray-300 hidden sm:inline">Olá, {userName}</span>
           )}
-          <Button variant="ghost" size="sm" onClick={handleLogout} className="text-gray-300 hover:text-white hover:bg-white/10">
-            <LogOut className="h-4 w-4 mr-1" />
-            <span className="hidden sm:inline">Sair</span>
+          <Button variant="ghost" size="icon" onClick={handleLogout} className="text-gray-300 hover:text-white hover:bg-white/10 sm:w-auto sm:px-3" title="Sair">
+            <LogOut className="h-4 w-4" />
+            <span className="hidden sm:inline ml-1">Sair</span>
           </Button>
         </div>
       </div>
