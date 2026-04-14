@@ -51,7 +51,7 @@ const Login = () => {
       <div className="absolute inset-0 bg-black/60" />
 
       {/* Login card */}
-      <div className="relative z-10 w-full max-w-md bg-white rounded-2xl shadow-2xl p-8">
+      <div className="relative z-10 w-full max-w-md mx-4 sm:mx-auto bg-white rounded-2xl shadow-2xl p-6 sm:p-8">
         <div className="flex flex-col items-center mb-6">
           <img
             src={griloLogo}
