@@ -36,14 +36,19 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `Você é um especialista em extrair dados de tabelas de quantitativo de aço para construção civil.
-Analise a imagem e extraia cada linha da tabela com os seguintes campos:
+            content: `Você é um especialista em engenharia estrutural e extração de dados de tabelas de Relação de Aço (Armadura de Concreto).
+
+Analise a imagem e extraia cada linha da tabela com as seguintes colunas:
+- N: Número da posição
 - bitola: diâmetro da barra em mm (valores comuns: 5.0, 6.3, 8.0, 10.0, 12.5, 16.0, 20.0, 25.0, 32.0)
-- comp: comprimento em metros
+- comp: comprimento em CENTÍMETROS (ex: 668, 578). Se houver rasura ou número sobreposto, utilize o valor que parece ser a correção final.
 - q: quantidade de barras (inteiro)
 
+IMPORTANTE: O campo "comp" deve ser retornado em CENTÍMETROS, exatamente como aparece na tabela. NÃO converta para metros.
+Seja extremamente cuidadoso com a leitura dos números manuscritos.
+
 Retorne APENAS um JSON válido no formato:
-{"rows": [{"bitola": "10.0", "comp": 3.5, "q": 12}, ...]}
+{"rows": [{"bitola": "10.0", "comp": 668, "q": 12}, ...]}
 
 Se não encontrar dados de tabela de aço, retorne: {"rows": []}
 Não inclua texto extra, apenas o JSON.`,
