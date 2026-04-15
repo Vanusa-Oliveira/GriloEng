@@ -79,8 +79,10 @@ const SteelTable = () => {
       const reader = new FileReader();
       reader.onload = async (ev) => {
         const dataUrl = ev.target?.result as string;
+        // Clear old data before processing new photo
+        setRows([]);
         setImage(dataUrl);
-        toast.success("Imagem carregada! Processando com IA...");
+        toast.info("Dados anteriores descartados. Processando nova imagem...");
         setIsProcessing(true);
         try {
           const { data, error } = await supabase.functions.invoke("extract-table", {
