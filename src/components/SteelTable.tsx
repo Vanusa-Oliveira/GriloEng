@@ -239,7 +239,7 @@ const SteelTable = () => {
         </Button>
         <Button
           variant="outline"
-          onClick={() => { setRows([]); toast.success("Tabela limpa!"); }}
+          onClick={() => { setRows([]); setImage(null); toast.success("Tabela limpa!"); }}
           disabled={rows.length === 0}
           className="flex-1 sm:flex-none text-destructive hover:text-destructive"
         >
