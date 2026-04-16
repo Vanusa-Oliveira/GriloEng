@@ -169,6 +169,7 @@ const SteelTable = () => {
           ref={fileInputRef}
           type="file"
           accept="image/*"
+          capture="environment"
           className="hidden"
           onChange={handleFileChange}
         />
@@ -176,6 +177,21 @@ const SteelTable = () => {
           {isProcessing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Camera className="h-4 w-4 mr-2" />}
           {isProcessing ? "Processando OCR..." : "Tirar Foto / Galeria"}
         </Button>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full text-muted-foreground hover:text-primary">
+              <HelpCircle className="h-5 w-5" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-64 text-sm space-y-2">
+            <p className="font-semibold text-foreground">Dicas para uma boa foto:</p>
+            <ul className="space-y-1.5 text-muted-foreground">
+              <li>📷 Limpe a lente da câmera.</li>
+              <li>☀️ Evite sombras em cima do papel.</li>
+              <li>📐 Tente manter o papel reto.</li>
+            </ul>
+          </PopoverContent>
+        </Popover>
         {image && (
           <img src={image} alt="Captura" className="h-16 w-16 rounded-md object-cover border border-border" />
         )}
