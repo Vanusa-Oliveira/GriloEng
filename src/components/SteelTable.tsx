@@ -1,12 +1,20 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash2, Download, Camera, Loader2, XCircle } from "lucide-react";
+import { Plus, Trash2, Download, Camera, Loader2, XCircle, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import ExportDialog from "./ExportDialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 export interface SteelRow {
   id: string;
@@ -23,8 +31,16 @@ const SteelTable = () => {
   const [image, setImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [highlightFields, setHighlightFields] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const summaryRef = useRef<HTMLDivElement>(null);
+
+  const handleCloseVerifyModal = () => {
+    setShowVerifyModal(false);
+    setHighlightFields(true);
+    setTimeout(() => setHighlightFields(false), 4000);
+  };
 
   const addRow = () => {
     setRows((prev) => [
@@ -107,6 +123,7 @@ const SteelTable = () => {
               }))
             );
             toast.success(`${data.rows.length} linhas extraídas com IA!`);
+            setShowVerifyModal(true);
           } else {
             toast.info("Nenhum dado de tabela de aço encontrado na imagem.");
           }
@@ -207,6 +224,7 @@ const SteelTable = () => {
                       value={row.comp || ""}
                       onChange={(e) => updateRow(row.id, "comp", parseFloat(e.target.value) || 0)}
                       placeholder="0"
+                      className={highlightFields ? "ring-2 ring-primary/50 transition-all duration-500" : "transition-all duration-500"}
                     />
                   </TableCell>
                   <TableCell>
@@ -217,6 +235,7 @@ const SteelTable = () => {
                       value={row.q || ""}
                       onChange={(e) => updateRow(row.id, "q", parseInt(e.target.value) || 0)}
                       placeholder="0"
+                      className={highlightFields ? "ring-2 ring-primary/50 transition-all duration-500" : "transition-all duration-500"}
                     />
                   </TableCell>
                   <TableCell className="font-medium">{getTotalMeters(row)}</TableCell>
@@ -306,6 +325,28 @@ const SteelTable = () => {
         onOpenChange={setShowExportDialog}
         rows={rows}
       />
+
+      <Dialog open={showVerifyModal} onOpenChange={setShowVerifyModal}>
+        <DialogContent className="sm:max-w-md border-primary/20">
+          <DialogHeader className="space-y-3">
+            <DialogTitle className="flex items-center gap-2 text-primary text-xl">
+              <AlertTriangle className="h-6 w-6 text-amber-500" />
+              Verificação Necessária
+            </DialogTitle>
+            <DialogDescription className="text-sm leading-relaxed">
+              A IA realizou a leitura automática dos dados. Como tabelas manuscritas podem conter rasuras, é{" "}
+              <strong className="text-foreground">obrigatório</strong> revisar os valores de{" "}
+              <strong className="text-foreground">Quantidade (Q)</strong> e{" "}
+              <strong className="text-foreground">Comprimento (COMP)</strong> na tabela abaixo antes de prosseguir com o pedido de compra.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={handleCloseVerifyModal} className="w-full">
+              Entendido, vou conferir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
