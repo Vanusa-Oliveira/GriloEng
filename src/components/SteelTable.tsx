@@ -236,10 +236,13 @@ const SteelTable = () => {
                   <TableCell>
                     <Input
                       type="number"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       step="1"
                       min="0"
                       value={row.comp || ""}
                       onChange={(e) => updateRow(row.id, "comp", parseFloat(e.target.value) || 0)}
+                      onKeyDown={(e) => { if (/[a-zA-Z]/.test(e.key) && e.key.length === 1) e.preventDefault(); }}
                       placeholder="0"
                       className={highlightFields ? "ring-2 ring-primary/50 transition-all duration-500" : "transition-all duration-500"}
                     />
@@ -247,10 +250,13 @@ const SteelTable = () => {
                   <TableCell>
                     <Input
                       type="number"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       step="1"
                       min="0"
                       value={row.q || ""}
                       onChange={(e) => updateRow(row.id, "q", parseInt(e.target.value) || 0)}
+                      onKeyDown={(e) => { if (/[a-zA-Z]/.test(e.key) && e.key.length === 1) e.preventDefault(); }}
                       placeholder="0"
                       className={highlightFields ? "ring-2 ring-primary/50 transition-all duration-500" : "transition-all duration-500"}
                     />
