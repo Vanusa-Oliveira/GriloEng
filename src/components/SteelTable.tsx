@@ -325,6 +325,28 @@ const SteelTable = () => {
         onOpenChange={setShowExportDialog}
         rows={rows}
       />
+
+      <Dialog open={showVerifyModal} onOpenChange={setShowVerifyModal}>
+        <DialogContent className="sm:max-w-md border-primary/20">
+          <DialogHeader className="space-y-3">
+            <DialogTitle className="flex items-center gap-2 text-primary text-xl">
+              <AlertTriangle className="h-6 w-6 text-amber-500" />
+              Verificação Necessária
+            </DialogTitle>
+            <DialogDescription className="text-sm leading-relaxed">
+              A IA realizou a leitura automática dos dados. Como tabelas manuscritas podem conter rasuras, é{" "}
+              <strong className="text-foreground">obrigatório</strong> revisar os valores de{" "}
+              <strong className="text-foreground">Quantidade (Q)</strong> e{" "}
+              <strong className="text-foreground">Comprimento (COMP)</strong> na tabela abaixo antes de prosseguir com o pedido de compra.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={handleCloseVerifyModal} className="w-full">
+              Entendido, vou conferir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
