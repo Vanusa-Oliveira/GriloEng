@@ -31,8 +31,16 @@ const SteelTable = () => {
   const [image, setImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [highlightFields, setHighlightFields] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const summaryRef = useRef<HTMLDivElement>(null);
+
+  const handleCloseVerifyModal = () => {
+    setShowVerifyModal(false);
+    setHighlightFields(true);
+    setTimeout(() => setHighlightFields(false), 4000);
+  };
 
   const addRow = () => {
     setRows((prev) => [
