@@ -35,14 +35,14 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8fafc]">
+    <div className="flex min-h-screen flex-col bg-[#f8fafc]">
       <AppHeader />
-      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 space-y-6">
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 space-y-6">
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-6">
           <SteelTable />
         </div>
       </main>
-      <footer className="sticky bottom-0 z-50 border-t border-gray-700 bg-[#0f1b3d] px-4 py-3 sm:px-6 shadow-inner">
+      <footer className="w-full border-t border-gray-700 bg-[#0f1b3d] px-4 py-4 sm:px-6">
         <p className="text-xs sm:text-sm text-white text-center font-medium">
           ⚠️ ATENÇÃO: Cálculo auxiliar. A conferência final dos dados é de responsabilidade do responsável técnico.
         </p>
