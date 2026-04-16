@@ -42,6 +42,11 @@ const Index = () => {
           <SteelTable />
         </div>
       </main>
+      <footer className="mx-auto max-w-7xl px-4 py-4 sm:px-6">
+        <p className="text-xs text-muted-foreground text-center">
+          Cálculo auxiliar. A conferência final é de responsabilidade do responsável técnico.
+        </p>
+      </footer>
     </div>
   );
 };

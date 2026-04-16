@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash2, Download, Camera, Loader2, XCircle, AlertTriangle } from "lucide-react";
+import { Plus, Trash2, Download, Camera, Loader2, XCircle, AlertTriangle, HelpCircle } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import ExportDialog from "./ExportDialog";
@@ -168,6 +169,7 @@ const SteelTable = () => {
           ref={fileInputRef}
           type="file"
           accept="image/*"
+          capture="environment"
           className="hidden"
           onChange={handleFileChange}
         />
@@ -175,6 +177,21 @@ const SteelTable = () => {
           {isProcessing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Camera className="h-4 w-4 mr-2" />}
           {isProcessing ? "Processando OCR..." : "Tirar Foto / Galeria"}
         </Button>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full text-muted-foreground hover:text-primary">
+              <HelpCircle className="h-5 w-5" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-64 text-sm space-y-2">
+            <p className="font-semibold text-foreground">Dicas para uma boa foto:</p>
+            <ul className="space-y-1.5 text-muted-foreground">
+              <li>📷 Limpe a lente da câmera.</li>
+              <li>☀️ Evite sombras em cima do papel.</li>
+              <li>📐 Tente manter o papel reto.</li>
+            </ul>
+          </PopoverContent>
+        </Popover>
         {image && (
           <img src={image} alt="Captura" className="h-16 w-16 rounded-md object-cover border border-border" />
         )}
@@ -219,10 +236,13 @@ const SteelTable = () => {
                   <TableCell>
                     <Input
                       type="number"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       step="1"
                       min="0"
                       value={row.comp || ""}
                       onChange={(e) => updateRow(row.id, "comp", parseFloat(e.target.value) || 0)}
+                      onKeyDown={(e) => { if (/[a-zA-Z]/.test(e.key) && e.key.length === 1) e.preventDefault(); }}
                       placeholder="0"
                       className={highlightFields ? "ring-2 ring-primary/50 transition-all duration-500" : "transition-all duration-500"}
                     />
@@ -230,10 +250,13 @@ const SteelTable = () => {
                   <TableCell>
                     <Input
                       type="number"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       step="1"
                       min="0"
                       value={row.q || ""}
                       onChange={(e) => updateRow(row.id, "q", parseInt(e.target.value) || 0)}
+                      onKeyDown={(e) => { if (/[a-zA-Z]/.test(e.key) && e.key.length === 1) e.preventDefault(); }}
                       placeholder="0"
                       className={highlightFields ? "ring-2 ring-primary/50 transition-all duration-500" : "transition-all duration-500"}
                     />
