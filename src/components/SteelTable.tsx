@@ -123,6 +123,7 @@ const SteelTable = () => {
               }))
             );
             toast.success(`${data.rows.length} linhas extraídas com IA!`);
+            setShowVerifyModal(true);
           } else {
             toast.info("Nenhum dado de tabela de aço encontrado na imagem.");
           }
@@ -223,6 +224,7 @@ const SteelTable = () => {
                       value={row.comp || ""}
                       onChange={(e) => updateRow(row.id, "comp", parseFloat(e.target.value) || 0)}
                       placeholder="0"
+                      className={highlightFields ? "ring-2 ring-primary/50 transition-all duration-500" : "transition-all duration-500"}
                     />
                   </TableCell>
                   <TableCell>
@@ -233,6 +235,7 @@ const SteelTable = () => {
                       value={row.q || ""}
                       onChange={(e) => updateRow(row.id, "q", parseInt(e.target.value) || 0)}
                       placeholder="0"
+                      className={highlightFields ? "ring-2 ring-primary/50 transition-all duration-500" : "transition-all duration-500"}
                     />
                   </TableCell>
                   <TableCell className="font-medium">{getTotalMeters(row)}</TableCell>
